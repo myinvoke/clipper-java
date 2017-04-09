@@ -53,7 +53,7 @@ class Edge {
 
     private final LongPoint bot;
 
-    private final LongPoint current;
+    private final LongPoint current; //current (updated for every new scanbeam)
 
     private final LongPoint top;
 
@@ -62,7 +62,7 @@ class Edge {
 
     PolyType polyTyp;
 
-    Edge.Side side;
+    Edge.Side side; //side only refers to current side of solution poly
 
     int windDelta; //1 or -1 depending on winding direction
 
@@ -133,15 +133,21 @@ class Edge {
     }
 
     public Edge getMaximaPair() {
-        Edge result = null;
         if (next.top.equals( top ) && next.nextInLML == null) {
-            result = next;
+            return next;
         }
         else if (prev.top.equals( top ) && prev.nextInLML == null) {
-            result = prev;
+            return prev;
         }
-        if (result != null && (result.outIdx == Edge.SKIP || result.nextInAEL == result.prevInAEL && !result.isHorizontal())) {
-            return null;
+        return null;
+    }
+
+    Edge getMaximaPairEx() {
+        //as above but returns null if MaxPair isn't in AEL (unless it's horizontal)
+        Edge result = getMaximaPair();
+        if (result == null || result.outIdx == Edge.SKIP ||
+          ((result.nextInAEL == result.prevInAEL) && !result.isHorizontal())) {
+        	return null;
         }
         return result;
     }

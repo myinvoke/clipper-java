@@ -86,7 +86,13 @@ public class Path extends ArrayList<LongPoint> {
                 p = p.next;
             }
             final double dx2n = Math.abs( LongPoint.getDeltaX( btmPt2.getPt(), p.getPt() ) );
-            return dx1p >= dx2p && dx1p >= dx2n || dx1n >= dx2p && dx1n >= dx2n;
+            
+            if (Math.max( dx1p, dx1n ) == Math.max( dx2p, dx2n ) && Math.min( dx1p, dx1n ) == Math.min( dx2p, dx2n )) {
+                return btmPt1.area() > 0; //if otherwise identical use orientation
+            }
+            else {
+                return dx1p >= dx2p && dx1p >= dx2n || dx1n >= dx2p && dx1n >= dx2n;
+            }
         }
 
         int idx;
@@ -184,8 +190,20 @@ public class Path extends ArrayList<LongPoint> {
         public void setPt( LongPoint pt ) {
             this.pt = pt;
         }
+    
+        private double area() {
+            Path.OutPt op = this;
+            double a = 0;
+            do {
+                a = a + (double) (op.prev.getPt().getX() + op.getPt().getX()) * (double) (op.prev.getPt().getY() - op.getPt().getY());
+                op = op.next;
+            } while (op != this);
+            return a * 0.5;	
+        }
     }
 
+    /** OutRec: contains a path in the clipping solution. Edges in the AEL will
+    carry a pointer to an OutRec when they are part of the clipping solution.*/
     static class OutRec {
         int Idx;
 
@@ -198,17 +216,7 @@ public class Path extends ArrayList<LongPoint> {
         PolyNode polyNode;
 
         public double area() {
-            Path.OutPt op = pts;
-            if (op == null) {
-                return 0;
-            }
-            double a = 0;
-            do {
-                a = a + (double) (op.prev.getPt().getX() + op.getPt().getX()) * (double) (op.prev.getPt().getY() - op.getPt().getY());
-                op = op.next;
-            }
-            while (op != pts);
-            return a * 0.5;
+            return pts.area();
         }
 
         public void fixHoleLinkage() {

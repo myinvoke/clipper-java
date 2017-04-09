@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import de.lighti.clipper.Path.OutRec;
 import de.lighti.clipper.Point.LongPoint;
 
 public abstract class ClipperBase implements Clipper {
@@ -12,12 +13,18 @@ public abstract class ClipperBase implements Clipper {
         Edge leftBound;
         Edge rightBound;
         LocalMinima next;
-    };
+    }
 
     protected class Scanbeam {
         long y;
         Scanbeam next;
-    };
+    }
+
+    protected class Maxima {
+        long x;
+        Maxima next;
+        Maxima prev;
+    }
 
     private static void initEdge( Edge e, Edge eNext, Edge ePrev, LongPoint pt ) {
         e.next = eNext;
@@ -65,7 +72,13 @@ public abstract class ClipperBase implements Clipper {
 
     protected LocalMinima currentLM;
 
-    private final List<List<Edge>> edges;
+    private final List<List<Edge>> edges = new ArrayList<List<Edge>>();
+
+    protected Scanbeam scanbeam;
+
+    protected final List<OutRec> polyOuts = new ArrayList<OutRec>();
+
+    protected Edge activeEdges;
 
     protected boolean hasOpenPaths;
 
@@ -79,7 +92,6 @@ public abstract class ClipperBase implements Clipper {
         minimaList = null;
         currentLM = null;
         hasOpenPaths = false;
-        edges = new ArrayList<List<Edge>>();
     }
 
     @Override
@@ -189,9 +201,6 @@ public abstract class ClipperBase implements Clipper {
                 return false;
             }
             e.prev.outIdx = Edge.SKIP;
-            if (e.prev.getBot().getX() < e.prev.getTop().getX()) {
-                e.prev.reverseHorizontal();
-            }
             final LocalMinima locMin = new LocalMinima();
             locMin.next = null;
             locMin.y = e.getBot().getY();
@@ -199,11 +208,12 @@ public abstract class ClipperBase implements Clipper {
             locMin.rightBound = e;
             locMin.rightBound.side = Edge.Side.RIGHT;
             locMin.rightBound.windDelta = 0;
-            while (e.next.outIdx != Edge.SKIP) {
-                e.nextInLML = e.next;
+            for ( ; ; ) {
                 if (e.getBot().getX() != e.prev.getTop().getX()) {
                     e.reverseHorizontal();
                 }
+                if (e.next.outIdx == Edge.SKIP) break;
+                e.nextInLML = e.next;
                 e = e.next;
             }
             insertLocalMinima( locMin );
@@ -333,12 +343,14 @@ public abstract class ClipperBase implements Clipper {
         return preserveCollinear;
     }
 
-    protected void popLocalMinima() {
+    protected boolean popLocalMinima( long y, LocalMinima[] current ) {
         LOGGER.entering( ClipperBase.class.getName(), "popLocalMinima" );
-        if (currentLM == null) {
-            return;
+        current[0] = currentLM;
+        if (currentLM != null && currentLM.y == y) {
+            currentLM = currentLM.next;
+            return true;
         }
-        currentLM = currentLM.next;
+        return false;
     }
 
     private Edge processBound( Edge e, boolean LeftBoundIsForward ) {
@@ -403,16 +415,14 @@ public abstract class ClipperBase implements Clipper {
             else {
                 EStart = e.next;
             }
-            if (EStart.outIdx != Edge.SKIP) {
-                if (EStart.deltaX == Edge.HORIZONTAL) //ie an adjoining horizontal skip edge
-                {
-                    if (EStart.getBot().getX() != e.getBot().getX() && EStart.getTop().getX() != e.getBot().getX()) {
-                        e.reverseHorizontal();
-                    }
-                }
-                else if (EStart.getBot().getX() != e.getBot().getX()) {
+            if (EStart.deltaX == Edge.HORIZONTAL) //ie an adjoining horizontal skip edge
+            {
+                if (EStart.getBot().getX() != e.getBot().getX() && EStart.getTop().getX() != e.getBot().getX()) {
                     e.reverseHorizontal();
                 }
+            }
+            else if (EStart.getBot().getX() != e.getBot().getX()) {
+                e.reverseHorizontal();
             }
         }
 
@@ -429,12 +439,7 @@ public abstract class ClipperBase implements Clipper {
                 while (Horz.prev.deltaX == Edge.HORIZONTAL) {
                     Horz = Horz.prev;
                 }
-                if (Horz.prev.getTop().getX() == result.next.getTop().getX()) {
-                    if (!LeftBoundIsForward) {
-                        result = Horz.prev;
-                    }
-                }
-                else if (Horz.prev.getTop().getX() > result.next.getTop().getX()) {
+                if (Horz.prev.getTop().getX() > result.next.getTop().getX()) {
                     result = Horz.prev;
                 }
             }
@@ -459,13 +464,9 @@ public abstract class ClipperBase implements Clipper {
                 while (Horz.next.deltaX == Edge.HORIZONTAL) {
                     Horz = Horz.next;
                 }
-                if (Horz.next.getTop().getX() == result.prev.getTop().getX()) {
-                    if (!LeftBoundIsForward) {
+                if (Horz.next.getTop().getX() == result.prev.getTop().getX() ||
+                    Horz.next.getTop().getX() > result.prev.getTop().getX()) {
                         result = Horz.next;
-                    }
-                }
-                else if (Horz.next.getTop().getX() > result.prev.getTop().getX()) {
-                    result = Horz.next;
                 }
             }
 
@@ -491,22 +492,206 @@ public abstract class ClipperBase implements Clipper {
         }
 
         //reset all edges ...
+        scanbeam = null;
         LocalMinima lm = minimaList;
         while (lm != null) {
+            insertScanbeam(lm.y);
             Edge e = lm.leftBound;
             if (e != null) {
                 e.setCurrent( new LongPoint( e.getBot() ) );
-                e.side = Edge.Side.LEFT;
                 e.outIdx = Edge.UNASSIGNED;
             }
             e = lm.rightBound;
             if (e != null) {
                 e.setCurrent( new LongPoint( e.getBot() ) );
-                e.side = Edge.Side.RIGHT;
                 e.outIdx = Edge.UNASSIGNED;
             }
             lm = lm.next;
         }
+        activeEdges = null;
     }
 
+    protected void insertScanbeam( long y ) {
+        LOGGER.entering( ClipperBase.class.getName(), "insertScanbeam" );
+
+        //single-linked list: sorted descending, ignoring dups.
+        if (scanbeam == null) {
+            scanbeam = new Scanbeam();
+            scanbeam.next = null;
+            scanbeam.y = y;
+        }
+        else if (y > scanbeam.y) {
+            final Scanbeam newSb = new Scanbeam();
+            newSb.y = y;
+            newSb.next = scanbeam;
+            scanbeam = newSb;
+        }
+        else {
+            Scanbeam sb2 = scanbeam;
+            while (sb2.next != null && (y <= sb2.next.y)) {
+                sb2 = sb2.next;
+            }
+            if (y == sb2.y) {
+                return; //ie ignores duplicates
+            }
+            final Scanbeam newSb = new Scanbeam();
+            newSb.y = y;
+            newSb.next = sb2.next;
+            sb2.next = newSb;
+        }
+    }
+
+    protected boolean popScanbeam( long[] y ) {
+        if (scanbeam == null) {
+            y[0] = 0;
+            return false;
+        }
+        y[0] = scanbeam.y;
+        scanbeam = scanbeam.next;
+        return true;
+    }
+
+    protected final boolean localMinimaPending() {
+        return currentLM != null;
+    }
+
+    protected OutRec createOutRec() {
+        OutRec result = new OutRec();
+        result.Idx = Edge.UNASSIGNED;
+        result.isHole = false;
+        result.isOpen = false;
+        result.firstLeft = null;
+        result.setPoints( null );
+        result.bottomPt = null;
+        result.polyNode = null;
+        polyOuts.add( result );
+        result.Idx = polyOuts.size() - 1;
+        return result;
+    }
+
+    protected void disposeOutRec( int index ) {
+        OutRec outRec = polyOuts.get( index );
+        outRec.setPoints( null );
+        outRec = null;
+        polyOuts.set( index, null );
+    }
+
+    protected void updateEdgeIntoAEL( Edge e ) {
+        if (e.nextInLML == null) {
+            throw new IllegalStateException("UpdateEdgeIntoAEL: invalid call");
+        }
+        final Edge aelPrev = e.prevInAEL;
+        final Edge aelNext = e.nextInAEL;
+        e.nextInLML.outIdx = e.outIdx;
+        if (aelPrev != null) {
+            aelPrev.nextInAEL = e.nextInLML;
+        }
+        else {
+            activeEdges = e.nextInLML;
+        }
+        if (aelNext != null) {
+            aelNext.prevInAEL = e.nextInLML;
+        }
+        e.nextInLML.side = e.side;
+        e.nextInLML.windDelta = e.windDelta;
+        e.nextInLML.windCnt = e.windCnt;
+        e.nextInLML.windCnt2 = e.windCnt2;
+        e = e.nextInLML;
+        e.setCurrent(e.getBot());
+        e.prevInAEL = aelPrev;
+        e.nextInAEL = aelNext;
+        if (e.isHorizontal()) {
+            insertScanbeam(e.getTop().getY());
+        }
+    }
+
+    protected void swapPositionsInAEL( Edge edge1, Edge edge2 ) {
+        LOGGER.entering( ClipperBase.class.getName(), "swapPositionsInAEL" );
+
+        //check that one or other edge hasn't already been removed from AEL ...
+        if (edge1.nextInAEL == edge1.prevInAEL || edge2.nextInAEL == edge2.prevInAEL) {
+            return;
+        }
+
+        if (edge1.nextInAEL == edge2) {
+            final Edge next = edge2.nextInAEL;
+            if (next != null) {
+                next.prevInAEL = edge1;
+            }
+            final Edge prev = edge1.prevInAEL;
+            if (prev != null) {
+                prev.nextInAEL = edge2;
+            }
+            edge2.prevInAEL = prev;
+            edge2.nextInAEL = edge1;
+            edge1.prevInAEL = edge2;
+            edge1.nextInAEL = next;
+        }
+        else if (edge2.nextInAEL == edge1) {
+            final Edge next = edge1.nextInAEL;
+            if (next != null) {
+                next.prevInAEL = edge2;
+            }
+            final Edge prev = edge2.prevInAEL;
+            if (prev != null) {
+                prev.nextInAEL = edge1;
+            }
+            edge1.prevInAEL = prev;
+            edge1.nextInAEL = edge2;
+            edge2.prevInAEL = edge1;
+            edge2.nextInAEL = next;
+        }
+        else {
+            final Edge next = edge1.nextInAEL;
+            final Edge prev = edge1.prevInAEL;
+            edge1.nextInAEL = edge2.nextInAEL;
+            if (edge1.nextInAEL != null) {
+                edge1.nextInAEL.prevInAEL = edge1;
+            }
+            edge1.prevInAEL = edge2.prevInAEL;
+            if (edge1.prevInAEL != null) {
+                edge1.prevInAEL.nextInAEL = edge1;
+            }
+            edge2.nextInAEL = next;
+            if (edge2.nextInAEL != null) {
+                edge2.nextInAEL.prevInAEL = edge2;
+            }
+            edge2.prevInAEL = prev;
+            if (edge2.prevInAEL != null) {
+                edge2.prevInAEL.nextInAEL = edge2;
+            }
+        }
+
+        if (edge1.prevInAEL == null) {
+            activeEdges = edge1;
+        }
+        else if (edge2.prevInAEL == null) {
+            activeEdges = edge2;
+        }
+
+        LOGGER.exiting( ClipperBase.class.getName(), "swapPositionsInAEL" );
+    }
+
+    protected void deleteFromAEL( Edge e ) {
+        LOGGER.entering( ClipperBase.class.getName(), "deleteFromAEL" );
+
+        Edge aelPrev = e.prevInAEL;
+        Edge aelNext = e.nextInAEL;
+        if (aelPrev == null && aelNext == null && (e != activeEdges)) {
+            return; //already deleted
+        }
+        if (aelPrev != null) {
+            aelPrev.nextInAEL = aelNext;
+        }
+        else {
+        	activeEdges = aelNext;
+        }
+        if (aelNext != null) {
+            aelNext.prevInAEL = aelPrev;
+        }
+        e.nextInAEL = null;
+        e.prevInAEL = null;
+
+        LOGGER.exiting( ClipperBase.class.getName(), "deleteFromAEL" );
+    }
 }
