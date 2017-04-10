@@ -707,7 +707,7 @@ public class DefaultClipper extends ClipperBase {
             //OutRec.Pts is the 'Left-most' point & OutRec.Pts.Prev is the 'Right-most'
             final Path.OutPt op = outRec.getPoints();
             final boolean ToFront = e.side == Edge.Side.LEFT;
-            LOGGER.finest( "op=" + op.getPointCount() );
+            LOGGER.finest( "op=" + Path.OutPt.getPointCount( op ) );
             LOGGER.finest( ToFront + " " + pt + " " + op.getPt() );
             if (ToFront && pt.equals( op.getPt() )) {
                 return op;
@@ -764,10 +764,10 @@ public class DefaultClipper extends ClipperBase {
         final Path.OutPt p2_lft = outRec2.getPoints();
         final Path.OutPt p2_rt = p2_lft.prev;
 
-        LOGGER.finest( "p1_lft.getPointCount() = " + p1_lft.getPointCount() );
-        LOGGER.finest( "p1_rt.getPointCount() = " + p1_rt.getPointCount() );
-        LOGGER.finest( "p2_lft.getPointCount() = " + p2_lft.getPointCount() );
-        LOGGER.finest( "p2_rt.getPointCount() = " + p2_rt.getPointCount() );
+        LOGGER.finest( "p1_lft.getPointCount() = " + Path.OutPt.getPointCount( p1_lft ) );
+        LOGGER.finest( "p1_rt.getPointCount() = " + Path.OutPt.getPointCount( p1_rt ) );
+        LOGGER.finest( "p2_lft.getPointCount() = " + Path.OutPt.getPointCount( p2_lft ) );
+        LOGGER.finest( "p2_rt.getPointCount() = " + Path.OutPt.getPointCount( p2_rt ) );
 
         //join e2 poly onto e1 poly and delete pointers to e2 ...
         if (e1.side == Edge.Side.LEFT) {
@@ -899,7 +899,7 @@ public class DefaultClipper extends ClipperBase {
                 continue;
             }
             Path.OutPt p = outRec.getPoints().prev;
-            final int cnt = p.getPointCount();
+            final int cnt = Path.OutPt.getPointCount( p );
             LOGGER.finest( "cnt = " + cnt );
             if (cnt < 2) {
                 continue;
@@ -919,7 +919,7 @@ public class DefaultClipper extends ClipperBase {
         //add each output polygon/contour to polytree ...
         for (int i = 0; i < polyOuts.size(); i++) {
             final OutRec outRec = polyOuts.get( i );
-            final int cnt = outRec.getPoints().getPointCount();
+            final int cnt = Path.OutPt.getPointCount( outRec.getPoints() );
             if (outRec.isOpen && cnt < 2 || !outRec.isOpen && cnt < 3) {
                 continue;
             }
@@ -1240,7 +1240,7 @@ public class DefaultClipper extends ClipperBase {
 
     private void fixupFirstLefts1( OutRec OldOutRec, OutRec NewOutRec ) {
         for (OutRec outRec : polyOuts) {
-            final OutRec firstLeft = outRec.firstLeft.parseFirstLeft();
+            final OutRec firstLeft = Path.OutRec.parseFirstLeft( outRec.firstLeft );
             if (outRec.getPoints() != null && firstLeft == OldOutRec) {
                 if (poly2ContainsPoly1( outRec.getPoints(), NewOutRec.getPoints() )) {
                     outRec.firstLeft = NewOutRec;
@@ -1260,7 +1260,7 @@ public class DefaultClipper extends ClipperBase {
             if (outRec.getPoints() == null || outRec == outerOutRec || outRec == innerOutRec) {
                 continue;
             }
-            final OutRec firstLeft = outRec.firstLeft.parseFirstLeft();
+            final OutRec firstLeft = Path.OutRec.parseFirstLeft( outRec.firstLeft );
             if (firstLeft != orfl && firstLeft != innerOutRec && firstLeft != outerOutRec) {
                 continue;
             }
@@ -1280,7 +1280,7 @@ public class DefaultClipper extends ClipperBase {
     private void fixupFirstLefts3( OutRec oldOutRec, OutRec newOutRec ) {
         //same as FixupFirstLefts1 but doesn't call Poly2ContainsPoly1()
         for (OutRec outRec : polyOuts) {
-            final OutRec firstLeft = outRec.firstLeft.parseFirstLeft();
+            final OutRec firstLeft = Path.OutRec.parseFirstLeft( outRec.firstLeft );
             if (outRec.getPoints() != null && firstLeft == oldOutRec) {
                 outRec.firstLeft = newOutRec;
             }

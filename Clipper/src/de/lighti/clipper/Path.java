@@ -157,15 +157,15 @@ public class Path extends ArrayList<LongPoint> {
             return pp;
         }
 
-        public int getPointCount() {
-
+        public static int getPointCount( OutPt pts ) {
+            if (pts == null) return 0;
             int result = 0;
-            Path.OutPt p = this;
+            OutPt p = pts;
             do {
                 result++;
                 p = p.next;
             }
-            while (p != this && p != null);
+            while (p != pts);
             return result;
         }
 
@@ -237,12 +237,11 @@ public class Path extends ArrayList<LongPoint> {
             return pts;
         }
 
-        public OutRec parseFirstLeft() {
-            OutRec ret = this;
-            while (ret != null && ret.pts == null) {
-                ret = ret.firstLeft;
+        public static OutRec parseFirstLeft( OutRec firstLeft ) {
+            while (firstLeft != null && firstLeft.getPoints() == null) {
+                firstLeft = firstLeft.firstLeft;
             }
-            return ret;
+            return firstLeft;
         }
 
         public void setPoints( Path.OutPt pts ) {
