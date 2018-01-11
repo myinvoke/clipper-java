@@ -1,11 +1,11 @@
 package de.lighti.clipper;
 
+import de.lighti.clipper.Path.OutRec;
+import de.lighti.clipper.Point.LongPoint;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-import de.lighti.clipper.Path.OutRec;
-import de.lighti.clipper.Point.LongPoint;
 
 public abstract class ClipperBase implements Clipper {
     protected class LocalMinima {
@@ -26,14 +26,14 @@ public abstract class ClipperBase implements Clipper {
         Maxima prev;
     }
 
-    private static void initEdge( Edge e, Edge eNext, Edge ePrev, LongPoint pt ) {
+    private static void initEdge(Edge e, Edge eNext, Edge ePrev, LongPoint pt ) {
         e.next = eNext;
         e.prev = ePrev;
         e.setCurrent( new LongPoint( pt ) );
         e.outIdx = Edge.UNASSIGNED;
     }
 
-    private static void initEdge2( Edge e, PolyType polyType ) {
+    private static void initEdge2(Edge e, PolyType polyType ) {
         if (e.getCurrent().getY() >= e.next.getCurrent().getY()) {
             e.setBot( new LongPoint( e.getCurrent() ) );
             e.setTop( new LongPoint( e.next.getCurrent() ) );
@@ -55,7 +55,7 @@ public abstract class ClipperBase implements Clipper {
         }
     }
 
-    private static Edge removeEdge( Edge e ) {
+    private static Edge removeEdge(Edge e ) {
         //removes e from double_linked_list (but without removing from memory)
         e.prev.next = e.next;
         e.next.prev = e.prev;
@@ -72,11 +72,9 @@ public abstract class ClipperBase implements Clipper {
 
     protected LocalMinima currentLM;
 
-    private final List<List<Edge>> edges = new ArrayList<List<Edge>>();
-
     protected Scanbeam scanbeam;
 
-    protected final List<OutRec> polyOuts = new ArrayList<OutRec>();
+    protected final List<OutRec> polyOuts = new ArrayList<>();
 
     protected Edge activeEdges;
 
@@ -95,7 +93,7 @@ public abstract class ClipperBase implements Clipper {
     }
 
     @Override
-    public boolean addPath( Path pg, PolyType polyType, boolean Closed ) {
+    public boolean addPath(Path pg, PolyType polyType, boolean Closed ) {
 
         if (!Closed && polyType == PolyType.CLIP) {
             throw new IllegalStateException( "AddPath: Open paths must be subject." );
@@ -115,7 +113,7 @@ public abstract class ClipperBase implements Clipper {
         }
 
         //create a new edge array ...
-        final List<Edge> edges = new ArrayList<Edge>( highI + 1 );
+        final List<Edge> edges = new ArrayList<>( highI + 1 );
         for (int i = 0; i <= highI; i++) {
             edges.add( new Edge() );
         }
@@ -217,11 +215,9 @@ public abstract class ClipperBase implements Clipper {
                 e = e.next;
             }
             insertLocalMinima( locMin );
-            this.edges.add( edges );
             return true;
         }
 
-        this.edges.add( edges );
         boolean leftBoundIsForward;
         Edge EMin = null;
 
@@ -295,10 +291,10 @@ public abstract class ClipperBase implements Clipper {
     }
 
     @Override
-    public boolean addPaths( Paths ppg, PolyType polyType, boolean closed ) {
+    public boolean addPaths(Paths paths, PolyType polyType, boolean closed ) {
         boolean result = false;
-        for (int i = 0; i < ppg.size(); ++i) {
-            if (addPath( ppg.get( i ), polyType, closed )) {
+        for (Path path : paths) {
+            if (addPath(path, polyType, closed)) {
                 result = true;
             }
         }
@@ -308,7 +304,6 @@ public abstract class ClipperBase implements Clipper {
     @Override
     public void clear() {
         disposeLocalMinimaList();
-        edges.clear();
         hasOpenPaths = false;
     }
 
@@ -338,8 +333,7 @@ public abstract class ClipperBase implements Clipper {
             tmpLm.next = newLm;
         }
     }
-
-    public boolean isPreserveCollinear() {
+    private boolean isPreserveCollinear() {
         return preserveCollinear;
     }
 
@@ -353,7 +347,7 @@ public abstract class ClipperBase implements Clipper {
         return false;
     }
 
-    private Edge processBound( Edge e, boolean LeftBoundIsForward ) {
+    private Edge processBound(Edge e, boolean LeftBoundIsForward ) {
         Edge EStart, result = e;
         Edge Horz;
 
@@ -605,7 +599,7 @@ public abstract class ClipperBase implements Clipper {
         }
     }
 
-    protected void swapPositionsInAEL( Edge edge1, Edge edge2 ) {
+    protected void swapPositionsInAEL(Edge edge1, Edge edge2 ) {
         LOGGER.entering( ClipperBase.class.getName(), "swapPositionsInAEL" );
 
         //check that one or other edge hasn't already been removed from AEL ...
