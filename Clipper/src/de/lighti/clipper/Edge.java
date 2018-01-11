@@ -1,19 +1,19 @@
 package de.lighti.clipper;
 
-import java.util.logging.Logger;
-
 import de.lighti.clipper.Clipper.ClipType;
 import de.lighti.clipper.Clipper.Direction;
 import de.lighti.clipper.Clipper.PolyFillType;
 import de.lighti.clipper.Clipper.PolyType;
 import de.lighti.clipper.Point.LongPoint;
 
+import java.util.logging.Logger;
+
 class Edge {
-    static enum Side {
+    enum Side {
         LEFT, RIGHT
     }
 
-    static boolean doesE2InsertBeforeE1( Edge e1, Edge e2 ) {
+    static boolean doesE2InsertBeforeE1(Edge e1, Edge e2 ) {
         if (e2.current.getX() == e1.current.getX()) {
             if (e2.top.getY() > e1.top.getY()) {
                 return e2.top.getX() < topX( e1, e2.top.getY() );
@@ -27,24 +27,24 @@ class Edge {
         }
     }
 
-    static boolean slopesEqual( Edge e1, Edge e2 ) {
+    static boolean slopesEqual(Edge e1, Edge e2 ) {
         return e1.getDelta().getY() * e2.getDelta().getX() == e1.getDelta().getX() * e2.getDelta().getY();
 
     }
 
-    static void swapPolyIndexes( Edge edge1, Edge edge2 ) {
+    static void swapPolyIndexes(Edge edge1, Edge edge2 ) {
         final int outIdx = edge1.outIdx;
         edge1.outIdx = edge2.outIdx;
         edge2.outIdx = outIdx;
     }
 
-    static void swapSides( Edge edge1, Edge edge2 ) {
+    static void swapSides(Edge edge1, Edge edge2 ) {
         final Edge.Side side = edge1.side;
         edge1.side = edge2.side;
         edge2.side = side;
     }
 
-    static long topX( Edge edge, long currentY ) {
+    static long topX(Edge edge, long currentY ) {
         if (currentY == edge.getTop().getY()) {
             return edge.getTop().getX();
         }
@@ -152,7 +152,7 @@ class Edge {
         return result;
     }
 
-    public Edge getNextInAEL( Direction direction ) {
+    public Edge getNextInAEL(Direction direction ) {
         return direction == Direction.LEFT_TO_RIGHT ? nextInAEL : prevInAEL;
     }
 
@@ -160,7 +160,7 @@ class Edge {
         return top;
     }
 
-    public boolean isContributing( PolyFillType clipFillType, PolyFillType subjFillType, ClipType clipType ) {
+    public boolean isContributing(PolyFillType clipFillType, PolyFillType subjFillType, ClipType clipType ) {
         LOGGER.entering( Edge.class.getName(), "isContributing" );
 
         PolyFillType pft, pft2;
@@ -260,7 +260,7 @@ class Edge {
         return true;
     }
 
-    public boolean isEvenOddAltFillType( PolyFillType clipFillType, PolyFillType subjFillType ) {
+    public boolean isEvenOddAltFillType(PolyFillType clipFillType, PolyFillType subjFillType ) {
         if (polyTyp == PolyType.SUBJECT) {
             return clipFillType == PolyFillType.EVEN_ODD;
         }
@@ -269,7 +269,7 @@ class Edge {
         }
     }
 
-    public boolean isEvenOddFillType( PolyFillType clipFillType, PolyFillType subjFillType ) {
+    public boolean isEvenOddFillType(PolyFillType clipFillType, PolyFillType subjFillType ) {
         if (polyTyp == PolyType.SUBJECT) {
             return subjFillType == PolyFillType.EVEN_ODD;
         }
@@ -336,4 +336,4 @@ class Edge {
         }
     }
 
-};
+}

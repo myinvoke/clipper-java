@@ -1,9 +1,9 @@
 package de.lighti.clipper;
 
+import de.lighti.clipper.Point.LongPoint;
+
 import java.util.ArrayList;
 import java.util.Collections;
-
-import de.lighti.clipper.Point.LongPoint;
 
 /**
  * A pure convenience class to avoid writing List<IntPoint> everywhere.
@@ -64,7 +64,7 @@ public class Path extends ArrayList<LongPoint> {
             }
         }
 
-        private static boolean isFirstBottomPt( Path.OutPt btmPt1, Path.OutPt btmPt2 ) {
+        private static boolean isFirstBottomPt(Path.OutPt btmPt1, Path.OutPt btmPt2 ) {
             Path.OutPt p = btmPt1.prev;
             while (p.getPt().equals( btmPt1.getPt() ) && !p.equals( btmPt1 )) {
                 p = p.prev;
@@ -86,7 +86,7 @@ public class Path extends ArrayList<LongPoint> {
                 p = p.next;
             }
             final double dx2n = Math.abs( LongPoint.getDeltaX( btmPt2.getPt(), p.getPt() ) );
-            
+
             if (Math.max( dx1p, dx1n ) == Math.max( dx2p, dx2n ) && Math.min( dx1p, dx1n ) == Math.min( dx2p, dx2n )) {
                 return btmPt1.area() > 0; //if otherwise identical use orientation
             }
@@ -101,7 +101,7 @@ public class Path extends ArrayList<LongPoint> {
 
         OutPt prev;
 
-        public Path.OutPt duplicate( boolean InsertAfter ) {
+        public Path.OutPt duplicate(boolean InsertAfter ) {
             final Path.OutPt result = new Path.OutPt();
             result.setPt( new LongPoint( getPt() ) );
             result.idx = idx;
@@ -190,7 +190,7 @@ public class Path extends ArrayList<LongPoint> {
         public void setPt( LongPoint pt ) {
             this.pt = pt;
         }
-    
+
         private double area() {
             Path.OutPt op = this;
             double a = 0;
@@ -198,7 +198,7 @@ public class Path extends ArrayList<LongPoint> {
                 a = a + (double) (op.prev.getPt().getX() + op.getPt().getX()) * (double) (op.prev.getPt().getY() - op.getPt().getY());
                 op = op.next;
             } while (op != this);
-            return a * 0.5;	
+            return a * 0.5;
         }
     }
 
@@ -249,7 +249,7 @@ public class Path extends ArrayList<LongPoint> {
         }
     }
 
-    private static Path.OutPt excludeOp( Path.OutPt op ) {
+    private static Path.OutPt excludeOp(Path.OutPt op ) {
         final Path.OutPt result = op.prev;
         result.next = op.next;
         op.next.prev = result;
@@ -288,7 +288,7 @@ public class Path extends ArrayList<LongPoint> {
         return cleanPolygon( 1.415 );
     }
 
-    public Path cleanPolygon( double distance ) {
+    public Path cleanPolygon(double distance ) {
         //distance = proximity in units/pixels below which vertices will be stripped.
         //Default ~= sqrt(2) so when adjacent vertices or semi-adjacent vertices have
         //both x & y coords within 1 unit, then the second vertex will be stripped.
@@ -404,7 +404,7 @@ public class Path extends ArrayList<LongPoint> {
         Collections.reverse( this );
     }
 
-    public Path TranslatePath( LongPoint delta ) {
+    public Path TranslatePath(LongPoint delta ) {
         final Path outPath = new Path( size() );
         for (int i = 0; i < size(); i++) {
             outPath.add( new LongPoint( get( i ).getX() + delta.getX(), get( i ).getY() + delta.getY() ) );
