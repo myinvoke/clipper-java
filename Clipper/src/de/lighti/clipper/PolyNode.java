@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class PolyNode {
+public class PolyNode {
+
     enum NodeType {
         ANY, OPEN, CLOSED
     }

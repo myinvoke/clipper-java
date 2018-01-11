@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DefaultClipper extends ClipperBase {
@@ -703,8 +704,10 @@ public class DefaultClipper extends ClipperBase {
             //OutRec.Pts is the 'Left-most' point & OutRec.Pts.Prev is the 'Right-most'
             final Path.OutPt op = outRec.getPoints();
             final boolean ToFront = e.side == Edge.Side.LEFT;
-            LOGGER.finest( "op=" + Path.OutPt.getPointCount( op ) );
-            LOGGER.finest( ToFront + " " + pt + " " + op.getPt() );
+            if (LOGGER.isLoggable( Level.FINEST )) {
+                LOGGER.finest( "op=" + Path.OutPt.getPointCount( op ) );
+                LOGGER.finest( ToFront + " " + pt + " " + op.getPt() );
+            }
             if (ToFront && pt.equals( op.getPt() )) {
                 return op;
             }

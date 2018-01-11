@@ -48,7 +48,7 @@ class Edge {
         if (currentY == edge.getTop().getY()) {
             return edge.getTop().getX();
         }
-        return (int) (edge.getBot().getX() + Math.round( edge.deltaX * (currentY - edge.getBot().getY()) ));
+        return edge.getBot().getX() + Math.round( edge.deltaX * (currentY - edge.getBot().getY()) );
     }
 
     private final LongPoint bot;
