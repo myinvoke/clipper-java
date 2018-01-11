@@ -1,14 +1,15 @@
 package de.lighti.clipper;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import de.lighti.clipper.Clipper.EndType;
 import de.lighti.clipper.Clipper.JoinType;
 import de.lighti.clipper.Point.LongPoint;
 
-class PolyNode {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class PolyNode {
+
     enum NodeType {
         ANY, OPEN, CLOSED
     }
@@ -18,7 +19,7 @@ class PolyNode {
     private int index;
     private JoinType joinType;
     private EndType endType;
-    protected final List<PolyNode> childs = new ArrayList<PolyNode>();
+    final List<PolyNode> childs = new ArrayList<>();
     private boolean isOpen;
 
     public void addChild( PolyNode child ) {

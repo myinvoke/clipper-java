@@ -1,14 +1,15 @@
 package de.lighti.clipper;
 
+import de.lighti.clipper.Path.Join;
+import de.lighti.clipper.Path.OutRec;
+import de.lighti.clipper.Point.LongPoint;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import de.lighti.clipper.Path.Join;
-import de.lighti.clipper.Path.OutRec;
-import de.lighti.clipper.Point.LongPoint;
 
 public class DefaultClipper extends ClipperBase {
     private class IntersectNode {
@@ -16,17 +17,17 @@ public class DefaultClipper extends ClipperBase {
         Edge Edge2;
         private LongPoint pt;
 
-        public LongPoint getPt() {
+        LongPoint getPt() {
             return pt;
         }
 
-        public void setPt( LongPoint pt ) {
+        void setPt( LongPoint pt ) {
             this.pt = pt;
         }
 
-    };
+    }
 
-    private static void getHorzDirection( Edge HorzEdge, Direction[] Dir, long[] Left, long[] Right ) {
+    private static void getHorzDirection(Edge HorzEdge, Direction[] Dir, long[] Left, long[] Right ) {
         if (HorzEdge.getBot().getX() < HorzEdge.getTop().getX()) {
             Left[0] = HorzEdge.getBot().getX();
             Right[0] = HorzEdge.getTop().getX();
@@ -63,7 +64,7 @@ public class DefaultClipper extends ClipperBase {
         return Left[0] < Right[0];
     }
 
-    private static boolean isOutRec1RightOfOutRec2( OutRec outRec1, OutRec outRec2 ) {
+    private static boolean isOutRec1RightOfOutRec2(OutRec outRec1, OutRec outRec2 ) {
         do {
             outRec1 = outRec1.firstLeft;
             if (outRec1 == outRec2) {
@@ -76,7 +77,7 @@ public class DefaultClipper extends ClipperBase {
 
     //See "The Point in Polygon Problem for Arbitrary Polygons" by Hormann & Agathos
     //http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.88.5498&rep=rep1&type=pdf
-    private static int isPointInPolygon( LongPoint pt, Path.OutPt op ) {
+    private static int isPointInPolygon(LongPoint pt, Path.OutPt op ) {
         //returns 0 if false, +1 if true, -1 if pt ON polygon boundary
         int result = 0;
         final Path.OutPt startOp = op;
@@ -127,7 +128,7 @@ public class DefaultClipper extends ClipperBase {
     }
 
     //------------------------------------------------------------------------------
-    private static boolean joinHorz( Path.OutPt op1, Path.OutPt op1b, Path.OutPt op2, Path.OutPt op2b, LongPoint Pt, boolean DiscardLeft ) {
+    private static boolean joinHorz(Path.OutPt op1, Path.OutPt op1b, Path.OutPt op2, Path.OutPt op2b, LongPoint Pt, boolean DiscardLeft ) {
         final Direction Dir1 = op1.getPt().getX() > op1b.getPt().getX() ? Direction.RIGHT_TO_LEFT : Direction.LEFT_TO_RIGHT;
         final Direction Dir2 = op2.getPt().getX() > op2b.getPt().getX() ? Direction.RIGHT_TO_LEFT : Direction.LEFT_TO_RIGHT;
         if (Dir1 == Dir2) {
@@ -181,7 +182,6 @@ public class DefaultClipper extends ClipperBase {
                 op2.setPt( new LongPoint( Pt ) );
                 op2b = op2.duplicate( !DiscardLeft );
             }
-            ;
         }
         else {
             while (op2.next.getPt().getX() >= Pt.getX() && op2.next.getPt().getX() <= op2.getPt().getX() && op2.next.getPt().getY() == Pt.getY()) {
@@ -196,9 +196,7 @@ public class DefaultClipper extends ClipperBase {
                 op2.setPt( new LongPoint( Pt ) );
                 op2b = op2.duplicate( DiscardLeft );
             }
-            ;
         }
-        ;
 
         if (Dir1 == Direction.LEFT_TO_RIGHT == DiscardLeft) {
             op1.prev = op2;
@@ -215,7 +213,7 @@ public class DefaultClipper extends ClipperBase {
         return true;
     }
 
-    private static boolean joinPoints( Join j, OutRec outRec1, OutRec outRec2 ) {
+    private static boolean joinPoints(Join j, OutRec outRec1, OutRec outRec2 ) {
         Path.OutPt op1 = j.outPt1, op1b;
         Path.OutPt op2 = j.outPt2, op2b;
 
@@ -348,7 +346,6 @@ public class DefaultClipper extends ClipperBase {
                     return false;
                 }
             }
-            ;
             op2b = op2.next;
             while (op2b.getPt().equals( op2.getPt() ) && op2b != op2) {
                 op2b = op2b.next;
@@ -393,7 +390,7 @@ public class DefaultClipper extends ClipperBase {
         }
     }
 
-    private static Paths minkowski( Path pattern, Path path, boolean IsSum, boolean IsClosed ) {
+    private static Paths minkowski(Path pattern, Path path, boolean IsSum, boolean IsClosed ) {
         final int delta = IsClosed ? 1 : 0;
         final int polyCnt = pattern.size();
         final int pathCnt = path.size();
@@ -434,7 +431,7 @@ public class DefaultClipper extends ClipperBase {
         return quads;
     }
 
-    public static Paths minkowskiDiff( Path poly1, Path poly2 ) {
+    public static Paths minkowskiDiff(Path poly1, Path poly2 ) {
         final Paths paths = minkowski( poly1, poly2, false, true );
         final DefaultClipper c = new DefaultClipper();
         c.addPaths( paths, PolyType.SUBJECT, true );
@@ -442,7 +439,7 @@ public class DefaultClipper extends ClipperBase {
         return paths;
     }
 
-    public static Paths minkowskiSum( Path pattern, Path path, boolean pathIsClosed ) {
+    public static Paths minkowskiSum(Path pattern, Path path, boolean pathIsClosed ) {
         final Paths paths = minkowski( pattern, path, true, pathIsClosed );
         final DefaultClipper c = new DefaultClipper();
         c.addPaths( paths, PolyType.SUBJECT, true );
@@ -450,7 +447,7 @@ public class DefaultClipper extends ClipperBase {
         return paths;
     }
 
-    public static Paths minkowskiSum( Path pattern, Paths paths, boolean pathIsClosed ) {
+    public static Paths minkowskiSum(Path pattern, Paths paths, boolean pathIsClosed ) {
         final Paths solution = new Paths();
         final DefaultClipper c = new DefaultClipper();
         for (int i = 0; i < paths.size(); ++i) {
@@ -465,7 +462,7 @@ public class DefaultClipper extends ClipperBase {
         return solution;
     }
 
-    private static boolean poly2ContainsPoly1( Path.OutPt outPt1, Path.OutPt outPt2 ) {
+    private static boolean poly2ContainsPoly1(Path.OutPt outPt1, Path.OutPt outPt2 ) {
         Path.OutPt op = outPt1;
         do {
             //nb: PointInPolygon returns 0 if false, +1 if true, -1 if pt on polygon
@@ -483,11 +480,11 @@ public class DefaultClipper extends ClipperBase {
     // SimplifyPolygon functions ...
     // Convert self-intersecting polygons into simple polygons
     //------------------------------------------------------------------------------
-    public static Paths simplifyPolygon( Path poly ) {
+    public static Paths simplifyPolygon(Path poly ) {
         return simplifyPolygon( poly, PolyFillType.EVEN_ODD );
     }
 
-    public static Paths simplifyPolygon( Path poly, PolyFillType fillType ) {
+    public static Paths simplifyPolygon(Path poly, PolyFillType fillType ) {
         final Paths result = new Paths();
         final DefaultClipper c = new DefaultClipper( STRICTLY_SIMPLE );
 
@@ -496,11 +493,11 @@ public class DefaultClipper extends ClipperBase {
         return result;
     }
 
-    public static Paths simplifyPolygons( Paths polys ) {
+    public static Paths simplifyPolygons(Paths polys ) {
         return simplifyPolygons( polys, PolyFillType.EVEN_ODD );
     }
 
-    public static Paths simplifyPolygons( Paths polys, PolyFillType fillType ) {
+    public static Paths simplifyPolygons(Paths polys, PolyFillType fillType ) {
         final Paths result = new Paths();
         final DefaultClipper c = new DefaultClipper( STRICTLY_SIMPLE );
 
@@ -535,7 +532,7 @@ public class DefaultClipper extends ClipperBase {
 
     private boolean usingPolyTree;
 
-    public ZFillCallback zFillFunction;
+    private ZFillCallback zFillFunction;
 
     //------------------------------------------------------------------------------
 
@@ -558,7 +555,7 @@ public class DefaultClipper extends ClipperBase {
         maxima = null;
         activeEdges = null;
         sortedEdges = null;
-        intersectList = new ArrayList<IntersectNode>();
+        intersectList = new ArrayList<>();
         intersectNodeComparer = ( node1, node2 ) -> {
             final long i = node2.getPt().getY() - node1.getPt().getY();
             if (i > 0) {
@@ -573,8 +570,8 @@ public class DefaultClipper extends ClipperBase {
         };
 
         usingPolyTree = false;
-        joins = new ArrayList<Join>();
-        ghostJoins = new ArrayList<Join>();
+        joins = new ArrayList<>();
+        ghostJoins = new ArrayList<>();
         reverseSolution = (REVERSE_SOLUTION & InitOptions) != 0;
         strictlySimple = (STRICTLY_SIMPLE & InitOptions) != 0;
 
@@ -602,7 +599,7 @@ public class DefaultClipper extends ClipperBase {
         }
     }
 
-    private void addGhostJoin( Path.OutPt Op, LongPoint OffPt ) {
+    private void addGhostJoin(Path.OutPt Op, LongPoint OffPt ) {
         final Join j = new Join();
         j.outPt1 = Op;
         j.setOffPt( new LongPoint( OffPt ) );
@@ -611,7 +608,7 @@ public class DefaultClipper extends ClipperBase {
 
     //------------------------------------------------------------------------------
 
-    private void addJoin( Path.OutPt Op1, Path.OutPt Op2, LongPoint OffPt ) {
+    private void addJoin(Path.OutPt Op1, Path.OutPt Op2, LongPoint OffPt ) {
         LOGGER.entering( DefaultClipper.class.getName(), "addJoin" );
         final Join j = new Join();
         j.outPt1 = Op1;
@@ -622,7 +619,7 @@ public class DefaultClipper extends ClipperBase {
 
     //------------------------------------------------------------------------------
 
-    private void addLocalMaxPoly( Edge e1, Edge e2, LongPoint pt ) {
+    private void addLocalMaxPoly(Edge e1, Edge e2, LongPoint pt ) {
         addOutPt( e1, pt );
         if (e2.windDelta == 0) {
             addOutPt( e2, pt );
@@ -641,7 +638,7 @@ public class DefaultClipper extends ClipperBase {
 
     //------------------------------------------------------------------------------
 
-    private Path.OutPt addLocalMinPoly( Edge e1, Edge e2, LongPoint pt ) {
+    private Path.OutPt addLocalMinPoly(Edge e1, Edge e2, LongPoint pt ) {
         LOGGER.entering( DefaultClipper.class.getName(), "addLocalMinPoly" );
         Path.OutPt result;
         Edge e, prevE;
@@ -684,7 +681,7 @@ public class DefaultClipper extends ClipperBase {
         return result;
     }
 
-    private Path.OutPt addOutPt( Edge e, LongPoint pt ) {
+    private Path.OutPt addOutPt(Edge e, LongPoint pt ) {
         LOGGER.entering( DefaultClipper.class.getName(), "addOutPt" );
         if (e.outIdx < 0) {
             final OutRec outRec = createOutRec();
@@ -707,8 +704,10 @@ public class DefaultClipper extends ClipperBase {
             //OutRec.Pts is the 'Left-most' point & OutRec.Pts.Prev is the 'Right-most'
             final Path.OutPt op = outRec.getPoints();
             final boolean ToFront = e.side == Edge.Side.LEFT;
-            LOGGER.finest( "op=" + Path.OutPt.getPointCount( op ) );
-            LOGGER.finest( ToFront + " " + pt + " " + op.getPt() );
+            if (LOGGER.isLoggable( Level.FINEST )) {
+                LOGGER.finest( "op=" + Path.OutPt.getPointCount( op ) );
+                LOGGER.finest( ToFront + " " + pt + " " + op.getPt() );
+            }
             if (ToFront && pt.equals( op.getPt() )) {
                 return op;
             }
@@ -732,13 +731,13 @@ public class DefaultClipper extends ClipperBase {
 
     private Path.OutPt getLastOutPt(Edge e) {
         OutRec outRec = polyOuts.get( e.outIdx );
-        if (e.side == Edge.Side.LEFT) 
+        if (e.side == Edge.Side.LEFT)
             return outRec.getPoints();
         else
             return outRec.getPoints().prev;
     }
 
-    private void appendPolygon( Edge e1, Edge e2 ) {
+    private void appendPolygon(Edge e1, Edge e2 ) {
         LOGGER.entering( DefaultClipper.class.getName(), "appendPolygon" );
 
         final OutRec outRec1 = polyOuts.get( e1.outIdx );
@@ -1116,17 +1115,17 @@ public class DefaultClipper extends ClipperBase {
     //------------------------------------------------------------------------------
 
     @Override
-    public boolean execute( ClipType clipType, Paths solution ) {
+    public boolean execute(ClipType clipType, Paths solution ) {
         return execute( clipType, solution, PolyFillType.EVEN_ODD, PolyFillType.EVEN_ODD );
     }
 
     @Override
-    public boolean execute( ClipType clipType, PolyTree polytree ) {
+    public boolean execute(ClipType clipType, PolyTree polytree ) {
         return execute( clipType, polytree, PolyFillType.EVEN_ODD, PolyFillType.EVEN_ODD );
     }
 
     @Override
-    public boolean execute( ClipType clipType, Paths solution, PolyFillType subjFillType, PolyFillType clipFillType ) {
+    public boolean execute(ClipType clipType, Paths solution, PolyFillType subjFillType, PolyFillType clipFillType ) {
 
         synchronized (this) {
 
@@ -1157,7 +1156,7 @@ public class DefaultClipper extends ClipperBase {
     }
 
     @Override
-    public boolean execute( ClipType clipType, PolyTree polytree, PolyFillType subjFillType, PolyFillType clipFillType ) {
+    public boolean execute(ClipType clipType, PolyTree polytree, PolyFillType subjFillType, PolyFillType clipFillType ) {
         synchronized (this) {
             this.subjFillType = subjFillType;
             this.clipFillType = clipFillType;
@@ -1238,7 +1237,7 @@ public class DefaultClipper extends ClipperBase {
 
     //------------------------------------------------------------------------------
 
-    private void fixupFirstLefts1( OutRec OldOutRec, OutRec NewOutRec ) {
+    private void fixupFirstLefts1(OutRec OldOutRec, OutRec NewOutRec ) {
         for (OutRec outRec : polyOuts) {
             final OutRec firstLeft = Path.OutRec.parseFirstLeft( outRec.firstLeft );
             if (outRec.getPoints() != null && firstLeft == OldOutRec) {
@@ -1250,7 +1249,7 @@ public class DefaultClipper extends ClipperBase {
     }
     //------------------------------------------------------------------------------
 
-    private void fixupFirstLefts2( OutRec innerOutRec, OutRec outerOutRec ) {
+    private void fixupFirstLefts2(OutRec innerOutRec, OutRec outerOutRec ) {
         //A polygon has split into two such that one is now the inner of the other.
         //It's possible that these polygons now wrap around other polygons, so check
         //every polygon that's also contained by OuterOutRec's FirstLeft container
@@ -1277,7 +1276,7 @@ public class DefaultClipper extends ClipperBase {
     }
     //----------------------------------------------------------------------
 
-    private void fixupFirstLefts3( OutRec oldOutRec, OutRec newOutRec ) {
+    private void fixupFirstLefts3(OutRec oldOutRec, OutRec newOutRec ) {
         //same as FixupFirstLefts1 but doesn't call Poly2ContainsPoly1()
         for (OutRec outRec : polyOuts) {
             final OutRec firstLeft = Path.OutRec.parseFirstLeft( outRec.firstLeft );
@@ -1373,7 +1372,7 @@ public class DefaultClipper extends ClipperBase {
         outRec.setPoints( pp );
     }
 
-    private OutRec getOutRec( int idx ) {
+    private OutRec getOutRec(int idx ) {
         OutRec outrec = polyOuts.get( idx );
         while (outrec != polyOuts.get( outrec.Idx )) {
             outrec = polyOuts.get( outrec.Idx );
@@ -1381,7 +1380,7 @@ public class DefaultClipper extends ClipperBase {
         return outrec;
     }
 
-    private void insertEdgeIntoAEL( Edge edge, Edge startEdge ) {
+    private void insertEdgeIntoAEL(Edge edge, Edge startEdge ) {
         LOGGER.entering( DefaultClipper.class.getName(), "insertEdgeIntoAEL" );
 
         if (activeEdges == null) {
@@ -1511,7 +1510,7 @@ public class DefaultClipper extends ClipperBase {
 
     //------------------------------------------------------------------------------
 
-    private void intersectEdges( Edge e1, Edge e2, LongPoint pt ) {
+    private void intersectEdges(Edge e1, Edge e2, LongPoint pt ) {
         LOGGER.entering( DefaultClipper.class.getName(), "insersectEdges" );
 
         //e1 will be to the left of e2 BELOW the intersection. Therefore e1 is before
@@ -1727,7 +1726,7 @@ public class DefaultClipper extends ClipperBase {
         }
     }
 
-    private void intersectPoint( Edge edge1, Edge edge2, LongPoint[] ipV ) {
+    private void intersectPoint(Edge edge1, Edge edge2, LongPoint[] ipV ) {
         final LongPoint ip = ipV[0] = new LongPoint();
 
         double b1, b2;
@@ -2050,7 +2049,7 @@ public class DefaultClipper extends ClipperBase {
             }
         }
 
-        Path.OutPt op1 = null;
+        Path.OutPt op1;
         for (;;) { //loop through consec. horizontal edges
             final boolean IsLastHorz = horzEdge == eLastHorz;
             Edge e = horzEdge.getNextInAEL( dir[0] );
@@ -2263,7 +2262,7 @@ public class DefaultClipper extends ClipperBase {
         }
     }
 
-    private void setHoleState( Edge e, OutRec outRec ) {
+    private void setHoleState(Edge e, OutRec outRec ) {
         Edge e2 = e.prevInAEL;
         Edge eTmp = null;
         while (e2 != null) {
@@ -2287,7 +2286,7 @@ public class DefaultClipper extends ClipperBase {
         }
     }
 
-    private void setZ( LongPoint pt, Edge e1, Edge e2 ) {
+    private void setZ(LongPoint pt, Edge e1, Edge e2 ) {
         if (pt.getZ() != 0 || zFillFunction == null) {
             return;
         }
@@ -2310,7 +2309,7 @@ public class DefaultClipper extends ClipperBase {
 
     //------------------------------------------------------------------------------;
 
-    private void swapPositionsInSEL( Edge edge1, Edge edge2 ) {
+    private void swapPositionsInSEL(Edge edge1, Edge edge2 ) {
         if (edge1.nextInSEL == null && edge1.prevInSEL == null) {
             return;
         }

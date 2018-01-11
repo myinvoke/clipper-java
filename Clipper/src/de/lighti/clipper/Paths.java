@@ -10,14 +10,14 @@ import java.util.ArrayList;
  */
 public class Paths extends ArrayList<Path> {
 
-    public static Paths closedPathsFromPolyTree( PolyTree polytree ) {
+    public static Paths closedPathsFromPolyTree(PolyTree polytree ) {
         final Paths result = new Paths();
         //        result.Capacity = polytree.Total;
         result.addPolyNode( polytree, PolyNode.NodeType.CLOSED );
         return result;
     }
 
-    public static Paths makePolyTreeToPaths( PolyTree polytree ) {
+    public static Paths makePolyTreeToPaths(PolyTree polytree ) {
 
         final Paths result = new Paths();
         //        result.Capacity = polytree.Total;
@@ -25,7 +25,7 @@ public class Paths extends ArrayList<Path> {
         return result;
     }
 
-    public static Paths openPathsFromPolyTree( PolyTree polytree ) {
+    public static Paths openPathsFromPolyTree(PolyTree polytree ) {
         final Paths result = new Paths();
         //        result.Capacity = polytree.ChildCount;
         for (final PolyNode c : polytree.getChilds()) {
@@ -49,7 +49,7 @@ public class Paths extends ArrayList<Path> {
         super( initialCapacity );
     }
 
-    public void addPolyNode( PolyNode polynode, PolyNode.NodeType nt ) {
+    public void addPolyNode(PolyNode polynode, PolyNode.NodeType nt ) {
         boolean match = true;
         switch (nt) {
             case OPEN:
@@ -73,7 +73,7 @@ public class Paths extends ArrayList<Path> {
         return cleanPolygons( 1.415 );
     }
 
-    public Paths cleanPolygons( double distance ) {
+    public Paths cleanPolygons(double distance ) {
         final Paths result = new Paths( size() );
         for (int i = 0; i < size(); i++) {
             result.add( get( i ).cleanPolygon( distance ) );
