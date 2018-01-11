@@ -1,16 +1,12 @@
 package de.lighti.clipper;
 
+import de.lighti.clipper.Clipper.*;
+import de.lighti.clipper.Point.DoublePoint;
+import de.lighti.clipper.Point.LongPoint;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import de.lighti.clipper.Clipper.ClipType;
-import de.lighti.clipper.Clipper.EndType;
-import de.lighti.clipper.Clipper.JoinType;
-import de.lighti.clipper.Clipper.PolyFillType;
-import de.lighti.clipper.Clipper.PolyType;
-import de.lighti.clipper.Point.DoublePoint;
-import de.lighti.clipper.Point.LongPoint;
 
 public class ClipperOffset {
     private static boolean nearZero( double val ) {
@@ -45,12 +41,12 @@ public class ClipperOffset {
         this.miterLimit = miterLimit;
         this.arcTolerance = arcTolerance;
         lowest = new LongPoint();
-        lowest.setX( -1l );
+        lowest.setX( -1L );
         polyNodes = new PolyNode();
-        normals = new ArrayList<DoublePoint>();
+        normals = new ArrayList<>();
     }
 
-    public void addPath( Path path, JoinType joinType, EndType endType ) {
+    public void addPath(Path path, JoinType joinType, EndType endType ) {
         int highI = path.size() - 1;
         if (highI < 0) {
             return;
@@ -100,7 +96,7 @@ public class ClipperOffset {
         }
     }
 
-    public void addPaths( Paths paths, JoinType joinType, EndType endType ) {
+    public void addPaths(Paths paths, JoinType joinType, EndType endType ) {
         for (final Path p : paths) {
             addPath( p, joinType, endType );
         }
@@ -108,7 +104,7 @@ public class ClipperOffset {
 
     public void clear() {
         polyNodes.getChilds().clear();
-        lowest.setX( -1l );
+        lowest.setX( -1L );
     }
 
     private void doMiter( int j, int k, double r ) {
@@ -333,7 +329,7 @@ public class ClipperOffset {
 
     //------------------------------------------------------------------------------
 
-    public void execute( Paths solution, double delta ) {
+    public void execute(Paths solution, double delta ) {
         solution.clear();
         fixOrientations();
         doOffset( delta );
@@ -363,7 +359,7 @@ public class ClipperOffset {
 
     //------------------------------------------------------------------------------
 
-    public void execute( PolyTree solution, double delta ) {
+    public void execute(PolyTree solution, double delta ) {
         solution.Clear();
         fixOrientations();
         doOffset( delta );
