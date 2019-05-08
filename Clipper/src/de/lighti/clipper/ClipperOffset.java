@@ -57,7 +57,8 @@ public class ClipperOffset {
 
         //strip duplicate points from path and also get index to the lowest point ...
         if (endType == EndType.CLOSED_LINE || endType == EndType.CLOSED_POLYGON) {
-            while (highI > 0 && path.get( 0 ) == path.get( highI )) {
+            //reference types need use equals
+            while (highI > 0 && path.get( 0 ).equals(path.get( highI ))) {
                 highI--;
             }
         }
